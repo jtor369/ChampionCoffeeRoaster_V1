@@ -1,9 +1,9 @@
+#include "Seeed_MCP9600_interface.h"
 
 enum TemperatureControl{
     Environment,
     Bean
-
-}
+};
 
 /*! \fn void ControlEnvironmentTemperature()
     \brief Sets the control loop feedback to use the measured Environment Temperature
@@ -65,7 +65,11 @@ void DisableHeating();
 /*! \fn ReadHeatingStatus();
     \brief 
 */
-bool ReadHeatingStatus();
 	
 //void SetTemperatureUpdateSpeed(); //should be permanent, since it is used in a control loop;
 	
+float GetControlTemperature();
+
+float GetHeatingPower();
+
+bool ReadHeatingEnabled();

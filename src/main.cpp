@@ -1,43 +1,10 @@
 #include <Arduino.h>
 
-
-#include "Seeed_MCP9600_interface.h"
-
-const uint8_t addr_beans = 0x60, addr_environment = 0x67;
-MCP9600 BeanTemperature(addr_beans), EnvironmentTemperature(addr_environment);
+#include "ControlInterface.h"
+#include "AvgToPM.h"
 
 
-/*! \var float bean_temperature_target
-    \brief Contains the last commanded desired bean temperature
-*/
-volatile float bean_temperature_target = 0.0;
-
-/*! \var float bean_temperature_measured
-    \brief Contains the last measured bean temperature
-*/
-volatile float bean_temperature_measured = 0.0;
-
-/*! \var float environment_temperature_target
-    \brief Contains the last commanded desired environment temperature
-*/
-volatile float environment_temperature_target = 0.0;
-
-/*! \var float environment_temperature_measured
-    \brief Contains the last measured environment temperature
-*/
-volatile float environment_temperature_measured = 0.0;
-
-/*! \var float heating_power
-    \brief 
-*/
-volatile float heating_power = 0.0;
-
-/*! \var bool heating_is_on
-    \brief 
-*/
-volatile bool heating_is_on = false;
-
-
+AvgToPM heater_power(50);
 
 /*! \fn void setup_timer()
     \brief Initializes TIMER 0 for interrupt frequency 1000 Hz
@@ -61,15 +28,61 @@ void setup_timer()
 
 }
 
+
+uint16_t Timer0_50Sps_counter = 0;
+const uint16_t Timer0_50Sps_top = 20;
+bool _50Sps_tick = false;
+
+uint16_t Timer0_10Sps_counter = 0;
+const uint16_t Timer0_10Sps_top = 100;
+bool _10Sps_tick = false;
+
 ISR(TIMER0_COMPA_vect)
 {
+  Timer0_50Sps_counter++;
+  Timer0_10Sps_counter++;
+
+  if (Timer0_50Sps_counter >= Timer0_50Sps_top)
+  {
+    Timer0_50Sps_counter = 0;
+    _50Sps_tick = true;
+  }
+
+  if (Timer0_10Sps_counter >= Timer0_10Sps_top)
+  {
+    Timer0_10Sps_counter = 0;
+    _10Sps_tick = true;
+  }
+
 }
 
+const uint8_t heater_control = 2;
+void Activate_Heater(){
+digitalWrite(heater_control,1);
+}
+
+void Deactivate_Heater(){
+digitalWrite(heater_control,0);
+}
 
 void setup() {
   // put your setup code here, to run once:
 }
 
+bool heater_activation = false;
+
 void loop() {
   // put your main code here, to run repeatedly:
+  if (_50Sps_tick){
+    _50Sps_tick = false;
+    
+
+    if (ReadHeatingEnabled()){
+      heater_activation = heater_power.GetSignal(GetHeatingPower());
+      heater_activation ? Activate_Heater() : Deactivate_Heater();
+    }else{
+      heater_activation = heater_power.GetSignal(0.0); //update average
+      Deactivate_Heater();
+    }
+  }
 }
