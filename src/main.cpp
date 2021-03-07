@@ -107,12 +107,12 @@ if (rxBuffer[2] == '0'){
 
           DisableHeating();
           Deactivate_Heater();
-              Serial.println("Heating disabled!");
+              Serial.println("{'heating':false}");
 
 } else if (rxBuffer[2] == '1'){
 
           EnableHeating();
-              Serial.println("Heating enabled!");
+              Serial.println("{'heating':true}");
 
       }
 
@@ -160,11 +160,12 @@ void loop() {
     //note, target should always be environment, if bean target is considered it must be an extra loop controlling environment(Max 250C)...
     if (ReadHeatingEnabled()){
       float f = control_filter.ProcessSample( GetTargetControlTemperature() - GetControlTemperature() );
-      Serial.print("PID: ");
+      Serial.print("{'PID': [");
       Serial.print(f);
-      Serial.print(" ");
-      Serial.println(f*scT);
-    SetHeatingPower( f*scT ); 
+      Serial.print(", ");
+      Serial.print(f*scT);
+      Serial.println("]}");
+      SetHeatingPower( f*scT ); 
     control_filter.CorrectY0(GetHeatingPower());
     control_filter.ProcessDelayLine();
     }else
@@ -175,14 +176,15 @@ void loop() {
 
     }
 
-    Serial.print("T: ");
+    Serial.print("{'T': ");
     Serial.print(GetTargetControlTemperature());
-    Serial.print(", E: ");
+    Serial.print(", 'E': ");
     Serial.print(ReadEnvironmentMeasured());
-    Serial.print(", B: ");
+    Serial.print(", 'B': ");
     Serial.print(ReadBeanMeasured());
-    Serial.print(", P: ");
-    Serial.println(GetHeatingPower());
+    Serial.print(", 'P': ");
+    Serial.print(GetHeatingPower());
+    Serial.println("}");
 
     //sprintf(oBuf,"T: %f, E: %f, B: %f, P: %f\r",(double)GetTargetControlTemperature(), (double)ReadEnvironmentMeasured(), (double)ReadBeanMeasured(), (double)GetHeatingPower());
     //Serial.write(oBuf);
