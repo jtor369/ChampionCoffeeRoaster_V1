@@ -10,7 +10,7 @@ TemperatureControl temperature_feedback = Environment;
 /*! \var float bean_temperature_target
     \brief Contains the last commanded desired bean temperature
 */
-volatile float bean_temperature_target = 0.0;
+//volatile float bean_temperature_target = 0.0;
 
 /*! \var float bean_temperature_measured
     \brief Contains the last measured bean temperature
@@ -20,7 +20,7 @@ float bean_temperature_measured = 0.0;
 /*! \var float environment_temperature_target
     \brief Contains the last commanded desired environment temperature
 */
-volatile float environment_temperature_target = 0.0;
+//volatile float environment_temperature_target = 0.0;
 
 /*! \var float environment_temperature_measured
     \brief Contains the last measured environment temperature
@@ -37,6 +37,25 @@ volatile float heating_power = 0.0;
 */
 volatile bool heating_is_enabled = false;
 
+/*! \var float control_temperature_target
+    \brief Contains the last commanded target temperature
+*/
+volatile float control_temperature_target = 0.0;
+
+void Init_MCP9600(){
+       if(EnvironmentTemperature.init(THER_TYPE_N))
+    {
+        Serial.println("EnvironmentTemperature sensor init failed!!");
+        
+    }
+
+    if(BeanTemperature.init(THER_TYPE_N))
+    {
+        Serial.println("BeanTemperature sensor init failed!!");
+
+    }
+
+}
 
 /*! \fn void refreshTemperatures()
     \brief Reads and stores the temperatures from the MCP9600 thermocouples.
@@ -57,11 +76,14 @@ void ControlEnvironmentTemperature()
 
 /*! \fn void ControlBeanTemperature()
     \brief Sets the control loop feedback to use the measured Bean Temperature
+    this feature has been disabled until it is revised to prevent component damage
 */
-void ControlBeanTemperature()
+/*
+void ControlBeanTemperature() 
 {
     temperature_feedback = Bean;
 }
+*/
 
 /*! \fn TemperatureControl ReadTemperatureControl()
     \brief Returns an enum variable describing which feedback temperature is being used in the temperature control loop
@@ -74,6 +96,7 @@ TemperatureControl ReadTemperatureControl()
 /*! \fn void SetBeanTarget(float target_temperature)
     \brief 
 */
+/*
 void SetBeanTarget(float target_temperature)
 {
     if (target_temperature <= MaxBeanTemperature && target_temperature >= 0.0){
@@ -81,14 +104,17 @@ void SetBeanTarget(float target_temperature)
     }
     
 }
+*/
 
 /*! \fn float GetBeanTarget();
     \brief 
 */
+/*
 float GetBeanTarget()
 {
     return bean_temperature_target;
 }
+*/
 
 
 /*! \fn float ReadBeanMeasured();
@@ -102,20 +128,24 @@ float ReadBeanMeasured()
 /*! \fn void SetEnvironmentTarget(float target_temperature);
     \brief 
 */
+/*
 void SetEnvironmentTarget(float target_temperature)
 {
     if (target_temperature <= MaxEnvironmentTemperature && target_temperature >= 0.0){
         environment_temperature_target = target_temperature;
     }
 }
+*/
 
 /*! \fn float GetEnvironmentTarget()
     \brief 
 */
+/*
 float GetEnvironmentTarget()
 {
     return environment_temperature_target;
 }
+*/
 
 /*! \fn float ReadEnvironmentMeasured()
     \brief 
@@ -125,23 +155,25 @@ float ReadEnvironmentMeasured()
     return environment_temperature_measured;
 }
 
-/*! \fn void EnableHeating();
+/*! \fn void EnableHeating()
     \brief 
 */
 void EnableHeating()
 {
     heating_is_enabled = true;
+
 }
 
-/*! \fn void DisableHeating();
+/*! \fn void DisableHeating()
     \brief 
 */
 void DisableHeating()
 {
     heating_is_enabled = false;
+
 }
 
-/*! \fn ReadHeatingStatus();
+/*! \fn ReadHeatingStatus()
     \brief Return whether the heating element is currently enabled
 */
 bool ReadHeatingEnabled()
@@ -149,6 +181,9 @@ bool ReadHeatingEnabled()
     return heating_is_enabled;
 }
 
+/*! \fn GetControlTemperature()
+    \brief Return the feedback temperature (bean or environment) used for the temperature control loop
+*/
 float GetControlTemperature()
 {
     switch (temperature_feedback)
@@ -166,14 +201,17 @@ float GetControlTemperature()
     return 250.0;
 }
 
-//Debug
+
 void SetHeatingPower(float power)
 {
-    if (power > 1.0){
+    if (power > 1.0)
+    {
         heating_power = 1.0;
-    }else if (power < 0.0){
+    }else if (power < 0.0)
+    {
         heating_power = 0.0;
-    }else{
+    }else
+    {
         heating_power = power;
     }
 }
@@ -185,6 +223,29 @@ float GetHeatingPower()
 }
 
 
+float GetTargetControlTemperature(){
+    return control_temperature_target;
+}
+void SetTargetControlTemperature(float target)
+{
+    switch (temperature_feedback)
+    {
+        case Environment:
+            if (target >= 0.0 && target <= MaxEnvironmentTemperature){
+                control_temperature_target = target;
+            }
+        break;
+        case Bean:
+           if (target >= 0.0 && target <= MaxBeanTemperature){
+                control_temperature_target = target;
+            }
+        break;
+    
+    default:
+        break;
+    }
+
+}
 
 	
 	

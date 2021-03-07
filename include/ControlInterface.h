@@ -13,7 +13,7 @@ void ControlEnvironmentTemperature();
 /*! \fn void ControlBeanTemperature()
     \brief Sets the control loop feedback to use the measured Bean Temperature
 */
-void ControlBeanTemperature();
+//void ControlBeanTemperature();
 
 
 /*! \fn TemperatureControl ReadTemperatureControl()
@@ -25,7 +25,7 @@ TemperatureControl ReadTemperatureControl();
 /*! \fn void SetBeanTarget(float target_temperature)
     \brief 
 */
-void SetBeanTarget(float target_temperature);
+//void SetBeanTarget(float target_temperature);
 
 /*! \fn float GetBeanTarget();
     \brief 
@@ -40,7 +40,7 @@ float ReadBeanMeasured();
 /*! \fn void SetEnvironmentTarget(float target_temperature);
     \brief 
 */
-void SetEnvironmentTarget(float target_temperature);
+//void SetEnvironmentTarget(float target_temperature);
 
 /*! \fn float GetEnvironmentTarget()
     \brief 
@@ -70,6 +70,16 @@ void DisableHeating();
 	
 float GetControlTemperature();
 
-float GetHeatingPower();
+float GetTargetControlTemperature();
+void SetTargetControlTemperature(float target);
 
+float GetHeatingPower();
+void SetHeatingPower(float power);
 bool ReadHeatingEnabled();
+
+void RefreshTemperatures();
+
+
+void Init_MCP9600();
+
+

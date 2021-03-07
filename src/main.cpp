@@ -1,10 +1,13 @@
 #include <Arduino.h>
 
+
 #include "ControlInterface.h"
 #include "AvgToPM.h"
+#include "Filter.h"
 
 
 AvgToPM heater_power(50);
+DigitalIntegrator control_filter;
 
 /*! \fn void setup_timer()
     \brief Initializes TIMER 0 for interrupt frequency 1000 Hz
@@ -67,22 +70,138 @@ digitalWrite(heater_control,0);
 
 void setup() {
   // put your setup code here, to run once:
+  pinMode(heater_control,OUTPUT);
+  DisableHeating();
+  Deactivate_Heater();
+  Init_MCP9600();
+  control_filter.SetGain(0.1);
+  ControlEnvironmentTemperature();
+  Serial.begin(115200);
+  //Serial.write("Hello World!\r\n");
+  setup_timer();
+}
+
+
+
+char rxBuffer[80];
+uint16_t rxIndex = 0;
+
+char processBuffer[80];
+
+
+void ProcessCommand(){
+
+  if (rxBuffer[0] == 'A'){
+  //case 'A': //Set target temperature [A,999.99] = 999.99 C
+      for (int i = 0; i < 6; i++){
+        processBuffer[i] = rxBuffer[i+2];
+
+      }
+        processBuffer[6] = '\0';
+        float t = atof(processBuffer);
+        SetTargetControlTemperature(t);
+  }
+ else if (rxBuffer[0] == 'B'){
+
+if (rxBuffer[2] == '0'){
+
+          DisableHeating();
+          Deactivate_Heater();
+              Serial.println("Heating disabled!");
+
+} else if (rxBuffer[2] == '1'){
+
+          EnableHeating();
+              Serial.println("Heating enabled!");
+
+      }
+
+  }
+
+
+}
+/*
+  if ()
+  {
+
+  }
+*/
+
+
+void ProcessCommunication(char ch){
+  if (ch != '\r'){
+    if (ch != '\n'){
+      rxBuffer[rxIndex++] = ch;
+    }
+  }else
+  {
+    rxBuffer[rxIndex] = '\0';
+    ProcessCommand();
+    rxIndex = 0;
+  }
+
 }
 
 bool heater_activation = false;
 
-void loop() {
-  // put your main code here, to run repeatedly:
-  if (_50Sps_tick){
-    _50Sps_tick = false;
-    
+char oBuf[80];
 
+float scT = 0.4;
+
+void loop() {
+  if (Serial.available()){
+    ProcessCommunication(Serial.read());
+  }
+  // put your main code here, to run repeatedly:
+  if (_10Sps_tick)
+  {
+    _10Sps_tick = false;
+    RefreshTemperatures();
+    //note, target should always be environment, if bean target is considered it must be an extra loop controlling environment(Max 250C)...
     if (ReadHeatingEnabled()){
-      heater_activation = heater_power.GetSignal(GetHeatingPower());
+      float f = control_filter.ProcessSample( GetTargetControlTemperature() - GetControlTemperature() );
+      Serial.print("PID: ");
+      Serial.print(f);
+      Serial.print(" ");
+      Serial.println(f*scT);
+    SetHeatingPower( f*scT ); 
+    control_filter.CorrectY0(GetHeatingPower());
+    control_filter.ProcessDelayLine();
+    }else
+    {
+          SetHeatingPower(0.0 );
+          control_filter.ProcessSample( 0 ); 
+          control_filter.ProcessDelayLine();
+
+    }
+
+    Serial.print("T: ");
+    Serial.print(GetTargetControlTemperature());
+    Serial.print(", E: ");
+    Serial.print(ReadEnvironmentMeasured());
+    Serial.print(", B: ");
+    Serial.print(ReadBeanMeasured());
+    Serial.print(", P: ");
+    Serial.println(GetHeatingPower());
+
+    //sprintf(oBuf,"T: %f, E: %f, B: %f, P: %f\r",(double)GetTargetControlTemperature(), (double)ReadEnvironmentMeasured(), (double)ReadBeanMeasured(), (double)GetHeatingPower());
+    //Serial.write(oBuf);
+  }
+
+  if ( _50Sps_tick )
+  {
+    _50Sps_tick = false;
+
+    if ( ReadHeatingEnabled() )
+    {
+      heater_activation = heater_power.GetSignal( GetHeatingPower() );
       heater_activation ? Activate_Heater() : Deactivate_Heater();
-    }else{
+    }
+    else
+    {
       heater_activation = heater_power.GetSignal(0.0); //update average
       Deactivate_Heater();
     }
   }
+
 }
