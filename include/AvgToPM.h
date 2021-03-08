@@ -30,7 +30,8 @@ class AvgToPM
                 {ret = false;}
                 cavg += ret ? 1.0 : 0.0;
             }
-            this->add_state(ret);
+            this->avg_array[i] = ret;
+            //this->add_state(ret);
             }
             this->avg = avg_target;
             /*
@@ -63,6 +64,7 @@ class AvgToPM
             return ret;
         }
 
+/*
         void add_state(bool state){
             this->avg_array[this->index] = state;
             this->index++;
@@ -70,6 +72,7 @@ class AvgToPM
                 this->index = 0;
             }
         }
+        */
 
         __UINT8_TYPE__ mean_size;
         __UINT8_TYPE__ index;
