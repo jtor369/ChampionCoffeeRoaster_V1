@@ -10,18 +10,40 @@ class AvgToPM
         }
 
         bool GetSignal(float avg_target){
-            bool ret = false;
-            if (avg_target > 0.0){
-                this->avg = this->calc_avg();
-                if (this->avg <= avg_target){
-                    ret = true;
-                }
+            if (this->avg != avg_target){
+                GenerateArray(avg_target);
             }
-            this->add_state(ret);
-            return ret;
+            return next();
         }
 
     private:
+        void GenerateArray(float avg_target){
+            bool ret = false;
+            float cavg = 0.0;
+            for (int i = 0; i < mean_size; i++){
+                            
+            if (avg_target > 0.0){
+                this->avg = cavg / (i+1);
+                if (this->avg <= avg_target){
+                    ret = true;
+                }else
+                {ret = false;}
+                cavg += ret ? 1.0 : 0.0;
+            }
+            this->add_state(ret);
+            }
+            this->avg = avg_target;
+            /*
+            Serial.print("[ ");
+            for (int i = 0; i < mean_size-1; i++){
+                Serial.print(avg_array[i] ? "1, " : "0, ");
+
+            }
+            Serial.print(avg_array[mean_size-1] ? "1" : "0");
+             Serial.println(" ];");
+             */
+       }
+
         float calc_avg()
         {
             float res = 0.0;
@@ -31,6 +53,14 @@ class AvgToPM
             res /= this->mean_size;
 
             return res;
+        }
+        bool next(){
+            bool ret = false;
+            ret = avg_array[index++];
+            if (index >= mean_size){
+                index = 0;
+            }
+            return ret;
         }
 
         void add_state(bool state){

@@ -117,7 +117,18 @@ if (rxBuffer[2] == '0'){
       }
 
   }
+  /*
+ else if (rxBuffer[0] == 'C'){
+  //case 'C': //Set heating power [C,1.0000]
+      for (int i = 0; i < 6; i++){
+        processBuffer[i] = rxBuffer[i+2];
 
+      }
+        processBuffer[6] = '\0';
+        float t = atof(processBuffer);
+        SetHeatingPower(t);
+}
+*/
 
 }
 /*
@@ -163,9 +174,9 @@ void loop() {
       Serial.print("{'PID': [");
       Serial.print(f);
       Serial.print(", ");
-      Serial.print(f*scT);
+      Serial.print(f);
       Serial.println("]}");
-      SetHeatingPower( f*scT ); 
+      SetHeatingPower( f ); 
     control_filter.CorrectY0(GetHeatingPower());
     control_filter.ProcessDelayLine();
     }else
