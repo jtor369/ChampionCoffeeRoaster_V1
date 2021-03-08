@@ -74,7 +74,7 @@ void setup() {
   DisableHeating();
   Deactivate_Heater();
   Init_MCP9600();
-  control_filter.SetGain(0.1);
+  control_filter.SetGain(0.0001);
   ControlEnvironmentTemperature();
   Serial.begin(115200);
   //Serial.write("Hello World!\r\n");
@@ -177,7 +177,24 @@ void loop() {
       Serial.print(f);
       Serial.println("]}");
       SetHeatingPower( f ); 
+      Serial.print("{'y0':");
+      Serial.print(control_filter.y0);
+      Serial.print(", 'y0c':");
     control_filter.CorrectY0(GetHeatingPower());
+    Serial.print(control_filter.y0);
+    Serial.print(", 'y1':");
+    Serial.print(control_filter.y1);
+    Serial.print(", 'y2':");
+    Serial.print(control_filter.y2);
+    Serial.print(", 'x0':");
+    Serial.print(control_filter.x0);
+    Serial.print(", 'x1':");
+    Serial.print(control_filter.x0);
+    Serial.print(", 'x2':");
+    Serial.print(control_filter.x0);
+    Serial.print(", 'zN':");
+    Serial.print(control_filter.zN);
+    Serial.println("}");
     control_filter.ProcessDelayLine();
     }else
     {
