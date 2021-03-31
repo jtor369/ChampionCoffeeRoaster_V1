@@ -1,3 +1,5 @@
+#pragma once
+
 //Max temperatures etc...
 /*
 Limits, Max EnvironmmentTemp 250C

@@ -1,3 +1,5 @@
+#pragma once
+
 #include "Seeed_MCP9600_interface.h"
 
 enum TemperatureControl{
