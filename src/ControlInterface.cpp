@@ -2,8 +2,10 @@
 #include "UnitSpecifications.h"
 
 
-const uint8_t addr_beans = 0x60, addr_environment = 0x67;
-MCP9600 BeanTemperature(addr_beans), EnvironmentTemperature(addr_environment);
+// const uint8_t addr_beans = 0x60, addr_environment = 0x67;
+const uint8_t  addr_environment = 0x60;
+// MCP9600 BeanTemperature(addr_beans), EnvironmentTemperature(addr_environment);
+MCP9600  EnvironmentTemperature(addr_environment);
 
 TemperatureControl temperature_feedback = Environment;
 
@@ -48,12 +50,13 @@ void Init_MCP9600(){
         Serial.println("EnvironmentTemperature sensor init failed!!");
         
     }
-
+/*
     if(BeanTemperature.init(THER_TYPE_N))
     {
         Serial.println("BeanTemperature sensor init failed!!");
 
     }
+    */
 
 }
 
@@ -62,7 +65,8 @@ void Init_MCP9600(){
 */
 void RefreshTemperatures()
 {
-    get_temperature(&BeanTemperature,&bean_temperature_measured);
+    //get_temperature(&BeanTemperature,&bean_temperature_measured);
+    bean_temperature_measured = 0;
     get_temperature(&EnvironmentTemperature,&environment_temperature_measured);
 }
 

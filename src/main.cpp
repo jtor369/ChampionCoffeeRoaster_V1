@@ -74,7 +74,7 @@ void setup() {
   DisableHeating();
   Deactivate_Heater();
   Init_MCP9600();
-  control_filter.SetGain(0.0001);
+  control_filter.SetGain(0.00003);
   ControlEnvironmentTemperature();
   Serial.begin(115200);
   //Serial.write("Hello World!\r\n");
