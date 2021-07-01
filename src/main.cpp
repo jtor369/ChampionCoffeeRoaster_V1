@@ -117,7 +117,7 @@ if (rxBuffer[2] == '0'){
       }
 
   }
-  /*
+  
  else if (rxBuffer[0] == 'C'){
   //case 'C': //Set heating power [C,1.0000]
       for (int i = 0; i < 6; i++){
@@ -128,7 +128,7 @@ if (rxBuffer[2] == '0'){
         float t = atof(processBuffer);
         SetHeatingPower(t);
 }
-*/
+
 
 }
 /*
@@ -176,7 +176,11 @@ void loop() {
       Serial.print(", ");
       Serial.print(f);
       Serial.println("]}");
-      SetHeatingPower( f ); 
+      //SetHeatingPower( f ); 
+      if ( GetControlTemperature() > 250.0 )
+      {
+        SetHeatingPower( 0.0 );
+      }
       Serial.print("{'y0':");
       Serial.print(control_filter.y0);
       Serial.print(", 'y0c':");
