@@ -43,6 +43,14 @@ public :
             index = 0;
             time = 0;
             running = true;
+            for (int i = 0; i < 4; i++)
+            {
+                Serial.print(i);
+                Serial.write(": ");
+                Serial.print(profile[i].time);
+                Serial.write(" ");
+                Serial.println(profile[i].temperature);
+            }
             SetTargetControlTemperature(0);
             HeaterOn();
         }
@@ -50,23 +58,33 @@ public :
     void stop(){
         HeaterOff();
         SetTargetControlTemperature(0);
+        running = false;
 
     }
 
     void update() //per second
     {
+
+         Serial.println("Update()");
         if (running){
+            Serial.println("IsRunning");
             if (time >= profile[index].time){
+                Serial.write("Time: ");
+                Serial.println(time);
                 if (profile[index].temperature < 0){
                     stop();
                 }
                 else
                 {
-                    SetTargetControlTemperature(((float)profile[index].temperature)/100.0);
+                    float temp = ((float)profile[index].temperature)/100.0;
+                    SetTargetControlTemperature(temp);
+                    Serial.write("Auto set temp: ");
+                    Serial.println(temp);
                     index++; //no bounds check here.. :/
                 }
             }
         }
+        time++;
 
     }
 

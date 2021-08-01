@@ -53,6 +53,7 @@ ISR(TIMER0_COMPA_vect)
 {
   Timer0_50Sps_counter++;
   Timer0_10Sps_counter++;
+  Timer0_1Sps_counter++;
 
   if (Timer0_50Sps_counter >= Timer0_50Sps_top)
   {
@@ -305,8 +306,9 @@ void loop() {
   }
 
   if (_1Sps_tick){
-  _1Sps_tick = false;
-  m.update();
+    _1Sps_tick = false;
+    Serial.println("1Sps_tick!");
+    m.update();
   }
 
 }
