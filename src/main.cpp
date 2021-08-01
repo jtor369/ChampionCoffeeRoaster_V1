@@ -4,6 +4,9 @@
 #include "ControlInterface.h"
 #include "AvgToPM.h"
 #include "Filter.h"
+#include "RoastProfile.h"
+
+//prototypes defined in RoastProfile.cpp
 
 
 AvgToPM heater_power(50);
@@ -40,6 +43,12 @@ uint16_t Timer0_10Sps_counter = 0;
 const uint16_t Timer0_10Sps_top = 100;
 bool _10Sps_tick = false;
 
+uint16_t Timer0_1Sps_counter = 0;
+const uint16_t Timer0_1Sps_top = 1000;
+bool _1Sps_tick = false;
+
+//uint32_t second_count = 0;
+
 ISR(TIMER0_COMPA_vect)
 {
   Timer0_50Sps_counter++;
@@ -57,6 +66,12 @@ ISR(TIMER0_COMPA_vect)
     _10Sps_tick = true;
   }
 
+  if (Timer0_1Sps_counter >= Timer0_1Sps_top)
+  {
+    Timer0_1Sps_counter = 0;
+    //second_count++;
+    _1Sps_tick = true;
+  }
 }
 
 const uint8_t heater_control = 2;
@@ -68,9 +83,20 @@ void Deactivate_Heater(){
 digitalWrite(heater_control,0);
 }
 
+uint8_t start_input = 11; //D11
+uint8_t stop_input = 12;  //D12
+uint8_t button_ref = 10;  //D10
+
 void setup() {
   // put your setup code here, to run once:
   pinMode(heater_control,OUTPUT);
+  pinMode(button_ref,OUTPUT);
+  pinMode(start_input,INPUT_PULLUP);
+  pinMode(stop_input,INPUT_PULLUP);
+  digitalWrite(button_ref,0);
+  digitalWrite(start_input,1);
+  digitalWrite(stop_input,1);
+
   DisableHeating();
   Deactivate_Heater();
   Init_MCP9600();
@@ -89,6 +115,21 @@ uint16_t rxIndex = 0;
 char processBuffer[80];
 
 
+void HeaterOff(){
+  DisableHeating();
+  Deactivate_Heater();
+  Serial.println("{'heating':false}");
+
+}
+
+void HeaterOn(){
+  EnableHeating();
+  Serial.println("{'heating':true}");
+}
+
+//SetTargetControlTemperature(t); //simple as can be..
+
+
 void ProcessCommand(){
 
   if (rxBuffer[0] == 'A'){
@@ -104,15 +145,15 @@ void ProcessCommand(){
  else if (rxBuffer[0] == 'B'){
 
 if (rxBuffer[2] == '0'){
-
-          DisableHeating();
-          Deactivate_Heater();
-              Serial.println("{'heating':false}");
+        HeaterOff();
+          //DisableHeating();
+          //Deactivate_Heater();
+          //    Serial.println("{'heating':false}");
 
 } else if (rxBuffer[2] == '1'){
-
-          EnableHeating();
-              Serial.println("{'heating':true}");
+          HeaterOn();
+          //EnableHeating();
+          //    Serial.println("{'heating':true}");
 
       }
 
@@ -158,6 +199,11 @@ bool heater_activation = false;
 char oBuf[80];
 
 float scT = 0.4;
+
+roast_profile_manager m(default_profile);
+
+bool prev_start = true,prev_stop = true; //inverted
+bool stop_triggered = false, start_triggered = false;
 
 void loop() {
   if (Serial.available()){
@@ -216,6 +262,30 @@ void loop() {
 
     //sprintf(oBuf,"T: %f, E: %f, B: %f, P: %f\r",(double)GetTargetControlTemperature(), (double)ReadEnvironmentMeasured(), (double)ReadBeanMeasured(), (double)GetHeatingPower());
     //Serial.write(oBuf);
+
+    if (digitalRead(start_input) == 0){
+      if (!prev_start && !start_triggered){
+        m.start();
+        start_triggered = true;
+     }
+      prev_start = false;
+    }else{
+      prev_start = true;
+      start_triggered = false;
+    }
+
+    if (digitalRead(stop_input) == 0){
+      if (!prev_stop && !stop_triggered){
+        m.stop();
+        stop_triggered = true;
+      }
+      prev_stop = false;
+    }else{
+      prev_stop = true;
+      stop_triggered = false;
+    }
+
+
   }
 
   if ( _50Sps_tick )
@@ -232,6 +302,11 @@ void loop() {
       heater_activation = heater_power.GetSignal(0.0); //update average
       Deactivate_Heater();
     }
+  }
+
+  if (_1Sps_tick){
+  _1Sps_tick = false;
+  m.update();
   }
 
 }
